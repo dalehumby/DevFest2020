@@ -1,6 +1,17 @@
-# Google DevFest 2020
+# Google DevFest South Africa 2020
 
-For this demo I am using the D1 Mini development board which can be purchased from [Communica](https://www.communica.co.za/products/bmt-d1-mini-pro-esp8266-16m-ant) or [Micro Robotics](https://www.robotics.org.za/MINI-D1-4M).
+Demonstrating the capabilities of the [ESP8266](https://www.espressif.com/en/products/socs/esp8266) WiFi enabled microchip from Espressif Systems for home automation and IoT projects. I will show you how to
+
+- turn an LED on and off
+- count pulses by detecting changes in the state of an input pin
+- publishing those changes to the MQTT pub/sub system
+- hosting a simple web page
+
+I am using the [D1 Mini](https://www.wemos.cc/en/latest/tutorials/d1/get_started_with_micropython_d1.html) development board which can be purchased from [Communica](https://www.communica.co.za/products/bmt-d1-mini-pro-esp8266-16m-ant) or [Micro Robotics](https://www.robotics.org.za/MINI-D1-4M) in South Africa.
+
+This board is useful because it has the ESP8266 soldered on to a PCB and includes USB-to-serial converter, and 5 VDC USB voltage is stepped down to 3.3 V that the ESP needs, so it can be plugged directly into a computer's USB port.
+
+It also includes a reset pin, an LED, and header sockets for easily connecting to other equipment.
 
 ![ESP8266 D1 Mini dev board](https://i.ibb.co/QYjTPxH/MINI-D1-4-M-008.jpg "D1 Mini")
 
@@ -69,6 +80,7 @@ The snippet of code will connect to your wifi. Change `testbench` and `mysecretp
 
 ```python
 import network
+
 station = network.WLAN(network.STA_IF)
 station.active(True)
 if not station.isconnected():
@@ -79,7 +91,7 @@ if not station.isconnected():
 print("Network config:", station.ifconfig())
 ```
 
-Python's [auto-indent](https://docs.micropython.org/en/latest/reference/repl.html#paste-mode) will mess things up if you paste directly. First `CTRL+E` to switch off auto-indent, past the code above, then `CTRL+D` to get back to normal mode. Press Enter, and your board should connect to your WiFi.
+Python's [auto-indent](https://docs.micropython.org/en/latest/reference/repl.html#paste-mode) will mess things up if you paste directly. First `CTRL+E` to switch off auto-indent, paste the code above, then `CTRL+D` to get back to normal mode. Press Enter, and your board should connect to your WiFi.
 
 This will output the tuple:
 ```
@@ -88,9 +100,9 @@ network config: ('10.0.0.154', '255.255.255.0', '10.0.0.254', '8.8.8.8')
 
 Where
 - `10.0.0.154` is this devices IP address on your LAN
-- `255.255.255.0` is your network mask
+- `255.255.255.0` is your subnet mask
 - `10.0.0.254` is the network gateway
-- `8.8.8.8` is the DNS server (in this case, one of Google's public DNS servers.)
+- `8.8.8.8` is the DNS server (in this case, one of Google's public DNS servers)
 
 ### Synchronise your clock using NTP
 
@@ -128,15 +140,17 @@ This code sets GPIO pin 5 to be an input, and whenever the input changes from lo
 from machine import Pin
 
 def pulse(state):
-    print("Pulse triggred")
+    print("Pulse detected")
 
 pulse_pin = Pin(5, Pin.IN)
 pulse_pin.irq(handler=pulse, trigger=Pin.IRQ_RISING)
 ```
 
-As an exercise, add a global variable called `count` that increments whenever a pulse is detected, and the latest count is printed out.
+As an exercise, add a global variable called `count` that is incremented and printed out whenever a pulse is detected.
 
 ### Sending data to MQTT
+[MQTT](https://mqtt.org/) is a lightweight pub/sub protocol designed for IoT.
+
 To send an MQTT message whenever a pulse occurs:
 
 ```python
@@ -147,9 +161,9 @@ from umqtt.simple import MQTTClient
 
 def pulse(state):
     global count  # Gloabl scope so count is incremented
-    print("Pulse triggred")
+    print("Pulse detected")
     count += 1
-    schedule(mqtt_pub)
+    schedule(mqtt_pub)  # Send the message outside of the interrupt service routine
 
 def mqtt_pub():
     print("Pubishing to MQTT")
@@ -182,7 +196,7 @@ Now press the button on your dev board. After each button press each MQTT client
 
 
 ### A simple web server
-The final step is to create a Prometheus endpoint that can be scraped by Prometheus to get the count. To do this we set up a simple web server that watches for HTTP requests to /metrics and returns a simple text webpage.
+The final step is to create a simple web page that displays the current count. To do this we set up a simple web server that watches for HTTP requests to /metrics and returns a simple text webpage.
 
 Restart your dev board (CTRL+D) and then paste the following:
 
@@ -193,7 +207,7 @@ from machine import Pin
 
 def pulse(state):
     global count  # Gloabl scope so count is incremented
-    print("Pulse triggred")
+    print("Pulse detected")
     count += 1
 
 # Setup Wifi
@@ -226,7 +240,9 @@ while True:
         conn.send("HTTP/1.1 200 OK\n")
         conn.send("Content-Type: text/html\n")
         conn.send("Connection: close\n\n")
-        conn.sendall("Count is at {count}".format(count=count))
+        conn.sendall("""
+            <h1>Counter</h1>
+            The count is at {count}""".format(count=count))
     conn.close()
 ```
 
@@ -234,7 +250,7 @@ while True:
 We've seen how, using the ESP8266 microcontroller we were able to 
 - turn an LED on and off
 - count pulses by detecting changes in the state of an input pin
-- publishing those changes to the MQTT pub/sub system
+- publishing those changes to a MQTT pub/sub broker
 - hosting a simple web page
 
 My [Powermeter](https://github.com/dalehumby/powermeter) repository fleshes out what I have demo'ed here, and incudes
