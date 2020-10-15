@@ -139,11 +139,11 @@ This code sets GPIO pin 5 to be an input, and whenever the input changes from lo
 ```python
 from machine import Pin
 
-def pulse(state):
-    print("Pulse detected")
+def pulse(pin_id):
+    print("Pulse detected", pin_id)
 
-pulse_pin = Pin(5, Pin.IN)
-pulse_pin.irq(handler=pulse, trigger=Pin.IRQ_RISING)
+pulse_pin = Pin(5, Pin.IN, Pin.PULL_UP)
+pulse_pin.irq(handler=pulse, trigger=Pin.IRQ_FALLING)
 ```
 
 As an exercise, add a global variable called `count` that is incremented and printed out whenever a pulse is detected.
@@ -163,11 +163,11 @@ def pulse(state):
     global count  # Gloabl scope so count is incremented
     print("Pulse detected")
     count += 1
-    schedule(mqtt_pub)  # Send the message outside of the interrupt service routine
+    schedule(mqtt_pub, count)  # Send the message outside of the interrupt service routine
 
-def mqtt_pub():
+def mqtt_pub(count):
     print("Pubishing to MQTT")
-    mqtt.publish(b"counter", bytes(count, "utf-8"))
+    mqtt.publish(b"counter", bytes(str(count), "utf-8"))
 
 # Setup Wifi
 station = network.WLAN(network.STA_IF)
@@ -179,8 +179,8 @@ print("Connected to wifi")
 print("Network config:", station.ifconfig())
 
 count = 0
-pulse_pin = Pin(5, Pin.IN)
-pulse_pin.irq(handler=pulse, trigger=Pin.IRQ_RISING)
+pulse_pin = Pin(5, Pin.IN, Pin.PULL_UP)
+pulse_pin.irq(handler=pulse, trigger=Pin.IRQ_FALLING)
 mqtt = MQTTClient("espdevboard", "10.0.0.10")
 mqtt.connect()
 ```
@@ -221,8 +221,8 @@ print("Connected to wifi")
 print("Network config:", station.ifconfig())
 
 count = 0
-pulse_pin = Pin(5, Pin.IN)
-pulse_pin.irq(handler=pulse, trigger=Pin.IRQ_RISING)
+pulse_pin = Pin(5, Pin.IN, Pin.PULL_UP)
+pulse_pin.irq(handler=pulse, trigger=Pin.IRQ_FALLING)
 
 # Setup the web socket
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
