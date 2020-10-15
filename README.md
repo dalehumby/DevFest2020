@@ -4,8 +4,8 @@ Demonstrating the capabilities of the [ESP8266](https://www.espressif.com/en/pro
 
 - turn an LED on and off
 - count pulses by detecting changes in the state of an input pin
-- publishing those changes to the MQTT pub/sub system
-- hosting a simple web page
+- publish those changes to an [MQTT](https://mosquitto.org/) pub/sub broker
+- host a simple web page
 
 I am using the [D1 Mini](https://www.wemos.cc/en/latest/tutorials/d1/get_started_with_micropython_d1.html) development board which can be purchased from [Communica](https://www.communica.co.za/products/bmt-d1-mini-pro-esp8266-16m-ant) or [Micro Robotics](https://www.robotics.org.za/MINI-D1-4M) in South Africa.
 
@@ -149,7 +149,7 @@ pulse_pin.irq(handler=pulse, trigger=Pin.IRQ_RISING)
 As an exercise, add a global variable called `count` that is incremented and printed out whenever a pulse is detected.
 
 ### Sending data to MQTT
-[MQTT](https://mqtt.org/) is a lightweight pub/sub protocol designed for IoT.
+[MQTT](https://mqtt.org/) is a lightweight pub/sub protocol designed for IoT. I am using the open source [Mosquitto](https://mosquitto.org/) broker in my home.
 
 To send an MQTT message whenever a pulse occurs:
 
@@ -186,6 +186,7 @@ mqtt.connect()
 ```
 
 To test, connect to your MQTT server using Mosquitto Client CLI.
+1. I am assuming that you already have an MQTT broker up and waiting for clients to publish and subscribe to messages. (If not, try this [tutorial](https://medium.com/@rossdanderson/installing-mosquitto-broker-on-debian-2a341fe88981).)
 1. If you don't already have the MQTT client CLI installed, on Debian `sudo apt-get install mosquitto-clients`
 2. Subscribe to the topic `counter` on your MQTT server (mine is at `10.0.0.10`)
     - `mosquitto_sub -v -h '10.0.0.10' -t 'counter'`
@@ -250,8 +251,8 @@ while True:
 We've seen how, using the ESP8266 microcontroller we were able to 
 - turn an LED on and off
 - count pulses by detecting changes in the state of an input pin
-- publishing those changes to a MQTT pub/sub broker
-- hosting a simple web page
+- publish those changes to a MQTT pub/sub broker
+- host a simple web page that displays the count
 
 My [Powermeter](https://github.com/dalehumby/powermeter) repository fleshes out what I have demo'ed here, and incudes
 - Better handling of transient network issues
