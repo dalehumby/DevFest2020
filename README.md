@@ -159,7 +159,7 @@ from machine import Pin
 from micropython import schedule
 from umqtt.simple import MQTTClient
 
-def pulse(state):
+def pulse(pin_id):
     global count  # Gloabl scope so count is incremented
     print("Pulse detected")
     count += 1
@@ -206,7 +206,7 @@ import usocket as socket
 import network
 from machine import Pin
 
-def pulse(state):
+def pulse(pin_id):
     global count  # Gloabl scope so count is incremented
     print("Pulse detected")
     count += 1
