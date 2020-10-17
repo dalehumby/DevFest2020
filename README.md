@@ -20,7 +20,7 @@ https://learn.sparkfun.com/tutorials/how-to-install-ch340-drivers/all
 
 ## Instructions to set up ESP8266
 
-1. Make yourself a development directors, eg. `mkdir espdemo`, and then `cd espdemo`
+1. Make yourself a development directory, eg. `mkdir espdemo`, and then `cd espdemo`
 2. Create a virtual environment called `env`: `python3 -m venv env` 
 3. Activate the virtual env: `source env/bin/activate`
 4. Install ESP Tool: `pip install esptool`
@@ -134,7 +134,9 @@ pin2.value(1)  # LED is off
 ```
 
 ### Set up an input pin
-This code sets GPIO pin 5 to be an input, and whenever the input changes from logic low to a logic high (a rising edge) then call the function `pulse()`, which prints out that a pulse was detected.
+This code sets GPIO pin 5 to be an input, and whenever the input changes from logic high to a logic low (a falling edge) then call the function `pulse()`, which prints out that a pulse was detected.
+
+On my D1 dev board I have soldered two wires to a push button switch. I have one wire from the switch connected to ground (labeled `G` on the board), and the other wire connected to `GPIO5`, which is labeled `D1` on the dev board. (See [pin outs of the D1 Mini](https://www.robotics.org.za/MINI-D1-4M))
 
 ```python
 from machine import Pin
@@ -146,7 +148,12 @@ pulse_pin = Pin(5, Pin.IN, Pin.PULL_UP)
 pulse_pin.irq(handler=pulse, trigger=Pin.IRQ_FALLING)
 ```
 
-As an exercise, add a global variable called `count` that is incremented and printed out whenever a pulse is detected.
+- When the button is not pushed the `pulse_pin` is high (a logic 1)
+- When you push the button, the pin is connected to ground (through the push button switch) and the pin reads as low (a logic 0.)
+
+When you push the button the `pulse()` function may trigger several times. This is called ["bounce" or "chatter"](https://en.wikipedia.org/wiki/Switch#Contact_bounce) and can be filtered out in software. (I won't go in to that here but my [Powermeter](https://github.com/dalehumby/powermeter/blob/af9f5d2a28cc05a07e8d38e2913963d4b3c5f08f/main.py#L91) repo shows a way of solving it.)
+
+As an exercise: Add a global variable called `count` that is incremented and printed out whenever a pulse is detected.
 
 ### Sending data to MQTT
 [MQTT](https://mqtt.org/) is a lightweight pub/sub protocol designed for IoT. I am using the open source [Mosquitto](https://mosquitto.org/) broker in my home.
@@ -248,13 +255,14 @@ while True:
 ```
 
 ## Putting it all together
-We've seen how, using the ESP8266 microcontroller we were able to 
+We've seen how, using the ESP8266 microcontroller, we were able to 
 - turn an LED on and off
 - count pulses by detecting changes in the state of an input pin
 - publish those changes to a MQTT pub/sub broker
 - host a simple web page that displays the count
 
 My [Powermeter](https://github.com/dalehumby/powermeter) repository fleshes out what I have demo'ed here, and incudes
+- [Debouncing](https://en.wikipedia.org/wiki/Switch#Contact_bounce) the input
 - Better handling of transient network issues
 - Periodically storing the `count` value to flash
 - Prometheus endpoint so the count value (among other metrics) can be scraped, stored and displayed by Grafana
