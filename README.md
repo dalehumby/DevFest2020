@@ -149,7 +149,7 @@ pulse_pin.irq(handler=pulse, trigger=Pin.IRQ_FALLING)
 ```
 
 - When the button is not pushed the `pulse_pin` is high (a logic 1)
-- When you push the button, the pin is connected to ground (through the push button switch) and the pin reads as low (a logic 0.)
+- When you push the button, the pin is connected to ground (through the push button switch) and the pin reads as low (a logic 0)
 
 When you push the button the `pulse()` function may trigger several times. This is called ["bounce" or "chatter"](https://en.wikipedia.org/wiki/Switch#Contact_bounce) and can be filtered out in software. (I won't go in to that here but my [Powermeter](https://github.com/dalehumby/powermeter/blob/af9f5d2a28cc05a07e8d38e2913963d4b3c5f08f/main.py#L91) repo shows a way of solving it.)
 
